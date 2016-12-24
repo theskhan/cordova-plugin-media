@@ -129,6 +129,22 @@ Media.prototype.play = function() {
     this.node.play();
 };
 
+Media.prototype.playSrc = function(src) {
+
+    this.src = src;
+    
+    // if Media was released, then node will be null and we need to create it again
+    if (!this.node) {
+        try {
+            this.node = createNode(this);
+        } catch (err) {
+            Media.onStatus(this.id, Media.MEDIA_ERROR, { code: MediaError.MEDIA_ERR_ABORTED });
+        }
+    }
+
+    this.node.play();
+};
+
 /**
  * Stop playing audio file.
  */

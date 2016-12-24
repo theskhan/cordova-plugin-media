@@ -19,12 +19,27 @@
 package org.apache.cordova.media;
 
 import android.media.AudioManager;
+
+/*
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnPreparedListener;
+*/
+
+import com.devbrackets.android.exomedia.listener.OnBufferUpdateListener;
+import com.devbrackets.android.exomedia.listener.OnCompletionListener;
+import com.devbrackets.android.exomedia.listener.OnErrorListener;
+import com.devbrackets.android.exomedia.listener.OnPreparedListener;
+import com.devbrackets.android.exomedia.listener.OnSeekCompletionListener;
+
+/* EXO MEDIA */
+import com.devbrackets.android.exomedia.EMAudioPlayer;
+/* END OF EXO MEDIA */
+
 import android.media.MediaRecorder;
 import android.os.Environment;
+import android.net.Uri;
 
 import org.apache.cordova.LOG;
 
@@ -89,7 +104,8 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
     private LinkedList<String> tempFiles = null; // Temporary recording file name
     private String tempFile = null;
 
-    private MediaPlayer player = null;      // Audio player object
+    private EMAudioPlayer player = null;
+    //private MediaPlayer player = null;      // Audio player object
     private boolean prepareOnly = true;     // playback after file prepare flag
     private int seekOnPrepared = 0;     // seek to this location once media is prepared
 
@@ -123,7 +139,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
         // Stop any play or record
         if (this.player != null) {
             if ((this.state == STATE.MEDIA_RUNNING) || (this.state == STATE.MEDIA_PAUSED)) {
-                this.player.stop();
+                this.player.stopPlayback();
                 this.setState(STATE.MEDIA_STOPPED);
             }
             this.player.release();
@@ -358,7 +374,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      *
      * @param player           The MediaPlayer that reached the end of the file
      */
-    public void onCompletion(MediaPlayer player) {
+    public void onCompletion() {
         LOG.d(LOG_TAG, "on completion is calling stopped");
         this.setState(STATE.MEDIA_STOPPED);
     }
@@ -431,7 +447,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      *
      * @param player           The MediaPlayer that is ready for playback
      */
-    public void onPrepared(MediaPlayer player) {
+    public void onPrepared() {
         // Listen for playback completion
         this.player.setOnCompletionListener(this);
         // seek to any location received while not prepared
@@ -470,15 +486,16 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      * @param arg1              the type of error that has occurred: (MEDIA_ERROR_UNKNOWN, MEDIA_ERROR_SERVER_DIED)
      * @param arg2              an extra code, specific to the error.
      */
-    public boolean onError(MediaPlayer player, int arg1, int arg2) {
+    public boolean onError() {
+        /*
         LOG.d(LOG_TAG, "AudioPlayer.onError(" + arg1 + ", " + arg2 + ")");
-
+        */
         // we don't want to send success callback
         // so we don't call setState() here
         this.state = STATE.MEDIA_STOPPED;
         this.destroy();
         // Send error notification to JavaScript
-        sendErrorStatus(arg1);
+        sendErrorStatus(-1);
 
         return false;
     }
@@ -560,7 +577,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
             switch (this.state) {
                 case MEDIA_NONE:
                     if (this.player == null) {
-                        this.player = new MediaPlayer();
+                        this.player = new EMAudioPlayer(this.handler.getApplicationContext());
                         this.player.setOnErrorListener(this);
                     }
                     try {
@@ -583,7 +600,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
                     if (this.audioFile.compareTo(file) == 0) {
                         //maybe it was recording?
                         if(this.recorder!=null && player==null) {
-                            this.player = new MediaPlayer();
+                            this.player = new EMAudioPlayer(this.handler.getApplicationContext());
                             this.player.setOnErrorListener(this);
                             this.prepareOnly = false;
 
@@ -628,7 +645,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
      */
     private void loadAudioFile(String file) throws IllegalArgumentException, SecurityException, IllegalStateException, IOException {
         if (this.isStreaming(file)) {
-            this.player.setDataSource(file);
+            this.player.setDataSource(this.handler.getApplicationContext(), Uri.parse(file));
             this.player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             //if it's a streaming file, play mode is implied
             this.setMode(MODE.PLAY);
@@ -636,6 +653,9 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
             this.player.setOnPreparedListener(this);
             this.player.prepareAsync();
         }
+        
+        // On Streaming support for now
+        /*
         else {
             if (file.startsWith("/android_asset/")) {
                 String f = file.substring(15);
@@ -660,6 +680,7 @@ public class AudioPlayer implements OnCompletionListener, OnPreparedListener, On
                 // Get duration
                 this.duration = getDurationInSeconds();
             }
+        */
     }
 
     private void sendErrorStatus(int errorCode) {

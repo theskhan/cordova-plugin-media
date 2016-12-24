@@ -76,6 +76,10 @@ Media.prototype.play = function(options) {
     exec(null, null, "Media", "startPlayingAudio", [this.id, this.src, options]);
 };
 
+Media.prototype.playSrc = function(src, options) {
+    exec(null, null, "Media", "startPlayingAudio", [this.id, src, options]);
+};
+
 /**
  * Stop playing audio file.
  */

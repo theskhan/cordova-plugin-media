@@ -201,6 +201,10 @@ public class AudioHandler extends CordovaPlugin {
         this.players.clear();
     }
 
+    public Context getApplicationContext() {
+        return this.cordova.getActivity().getApplicationContext(); 
+    }
+
     /**
      * Stop all audio players and recorders on navigate.
      */
