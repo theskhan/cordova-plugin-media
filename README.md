@@ -1,3 +1,8 @@
+#Why this fork?
+Cordova's default Media plugin has issues with loading Live Streaming urls, sometime it takes very long to play. Plugin uses default Android MediaPlayer which has limited support for various codecs. ExoPlayer from Google, has support for many popular media codecs. 
+
+I am using ExoMedia which provides same interface as MediaPlayer, but uses ExoPlayer if device has support for it else falls back to default MediaPlayer.
+
 ---
 title: Media
 description: Record and play audio on the device.
